@@ -11,9 +11,9 @@ import(
 func main() {
 	fmt.Printf("==========\n")
 	chain := blockchain.InitBlockChain()
-	chain.AddBlock("First Block after Genesis")
-	chain.AddBlock("Second Block after Genesis")
-	chain.AddBlock("Third Block after Genesis")
+	chain.AddBlock("1st Block after Genesis!")
+	chain.AddBlock("2nd Block after Genesis!")
+	chain.AddBlock("3rd Block after Genesis!")
 	fmt.Printf("==========\n")
 
 	for _, block := range chain.Blocks {
