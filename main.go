@@ -13,6 +13,7 @@ import (
 
 type CommandLine struct{}
 
+// printUsage prints the CLI usage text to the console.
 func (cli *CommandLine) printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println(" getbalance -address ADDRESS - get the balance for an address")
@@ -21,6 +22,9 @@ func (cli *CommandLine) printUsage() {
 	fmt.Println(" send -from FROM -to TO -amount AMOUNT - Send amount of coins")
 }
 
+// validateArgs checks if the command-line arguments are provided.
+// If no arguments are given, it calls printUsage to display usage information
+// and then exits the program.
 func (cli *CommandLine) validateArgs() {
 	if len(os.Args) < 2 {
 		cli.printUsage()
@@ -28,6 +32,9 @@ func (cli *CommandLine) validateArgs() {
 	}
 }
 
+// printChain iterates over the blockchain, starting from the current last block,
+// and prints the previous hash, current hash, and proof of work validation for each block.
+// It continues until it reaches the genesis block, identified by an empty previous hash.
 func (cli *CommandLine) printChain() {
 	chain := blockchain.ContinueBlockChain("")
 	defer chain.Database.Close()
@@ -48,12 +55,19 @@ func (cli *CommandLine) printChain() {
 	}
 }
 
+// createBlockChain initializes a new blockchain with a genesis block and assigns
+// the genesis reward to the specified address. It closes the database after
+// initialization and prints a completion message.
 func (cli *CommandLine) createBlockChain(address string) {
 	chain := blockchain.InitBlockChain(address)
 	chain.Database.Close()
 	fmt.Println("Finished!")
 }
 
+// getBalance retrieves and prints the total balance for a given address.
+// It opens an existing blockchain, calculates the balance by summing all unspent
+// transaction outputs for the address, and displays the balance. It closes the
+// database after processing.
 func (cli *CommandLine) getBalance(address string) {
 	chain := blockchain.ContinueBlockChain(address)
 	defer chain.Database.Close()
@@ -68,6 +82,10 @@ func (cli *CommandLine) getBalance(address string) {
 	fmt.Printf("Balance of %s: %d\n", address, balance)
 }
 
+// send creates a new transaction from the sender to the recipient with the specified amount,
+// adds the transaction to a new block, and appends the block to the blockchain. It continues
+// an existing blockchain, creates the transaction, and invokes AddBlock to include it in the chain.
+// The database connection is closed after the operation, and a success message is printed.
 func (cli *CommandLine) send(from, to string, amount int) {
 	chain := blockchain.ContinueBlockChain(from)
 	defer chain.Database.Close()
@@ -77,6 +95,12 @@ func (cli *CommandLine) send(from, to string, amount int) {
 	fmt.Println("Success!")
 }
 
+// run parses and validates command-line arguments and executes the appropriate
+// command based on the input. It supports four commands: getbalance, createblockchain,
+// printchain, and send. Each command has specific flags that must be provided.
+// If the required flags are not supplied, or if an invalid command is given, it
+// prints usage information and exits. Upon successful parsing, it calls the
+// corresponding method for each command to perform the blockchain operations.
 func (cli *CommandLine) run() {
 	cli.validateArgs()
 
@@ -147,6 +171,9 @@ func (cli *CommandLine) run() {
 	}
 }
 
+// main parses the command-line arguments and runs the appropriate command. It
+// initializes a CommandLine object and calls its run() method to perform the
+// blockchain operations.
 func main() {
 	defer os.Exit(0)
 	cli := CommandLine{}

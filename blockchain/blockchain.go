@@ -25,6 +25,7 @@ type BlockChainIterator struct {
 	Database    *badger.DB
 }
 
+// DBexists returns true if the database exists, false otherwise.
 func DBexists() bool {
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
@@ -33,6 +34,9 @@ func DBexists() bool {
 	return true
 }
 
+// ContinueBlockChain loads a badger database from the disk and returns a *BlockChain
+// with the lasthash and the database. If no existing blockchain is found it will
+// terminate the program.
 func ContinueBlockChain(address string) *BlockChain {
 	if DBexists() == false {
 		fmt.Println("No existing blockchain found, create one!")
@@ -66,6 +70,9 @@ func ContinueBlockChain(address string) *BlockChain {
 	return &chain
 }
 
+// InitBlockChain creates a new blockchain, sets the genesis block and
+// the lasthash and returns a *BlockChain. If a blockchain already
+// exists it will terminate the program.
 func InitBlockChain(address string) *BlockChain {
 	var lastHash []byte
 
@@ -101,6 +108,9 @@ func InitBlockChain(address string) *BlockChain {
 	return &blockchain
 }
 
+// AddBlock takes a slice of Transaction objects and adds a new block to the
+// blockchain using the current lasthash as the PrevHash. It updates the
+// lasthash and returns nil on success. If a problem occurs it will panic.
 func (chain *BlockChain) AddBlock(transactions []*Transaction) {
 	var lastHash []byte
 
@@ -131,12 +141,16 @@ func (chain *BlockChain) AddBlock(transactions []*Transaction) {
 	Handle(err)
 }
 
+// Iterator returns an iterator that will allow you to iterate over each block in the blockchain.
 func (chain *BlockChain) Iterator() *BlockChainIterator {
 	iter := &BlockChainIterator{chain.LastHash, chain.Database}
 
 	return iter
 }
 
+// Next retrieves the next block from the blockchain using the current hash stored in
+// the iterator. It decodes the block from the database and updates the iterator's
+// current hash to the previous hash of the retrieved block. Returns the decoded Block.
 func (iter *BlockChainIterator) Next() *Block {
 	var block *Block
 
@@ -148,8 +162,6 @@ func (iter *BlockChainIterator) Next() *Block {
 			block = Deserialize(encodedBlock)
 			return nil
 		})
-
-		return err
 	})
 	Handle(err)
 
@@ -158,6 +170,11 @@ func (iter *BlockChainIterator) Next() *Block {
 	return block
 }
 
+// FindUnspentTransactions scans the entire blockchain to identify all transactions
+// that have unspent outputs for a given address. It returns a list of transactions
+// where the address can unlock at least one output. The function maintains a record
+// of spent transaction outputs to ensure no double-counting occurs, and it excludes
+// inputs that have already been spent by the address.
 func (chain *BlockChain) FindUnspentTransactions(address string) []Transaction {
 	var unspentTxs []Transaction
 
@@ -201,6 +218,8 @@ func (chain *BlockChain) FindUnspentTransactions(address string) []Transaction {
 	return unspentTxs
 }
 
+// FindUTXO takes an address and returns a list of all unspent transaction
+// outputs that can be unlocked by the address.
 func (chain *BlockChain) FindUTXO(address string) []TxOutput {
 	var UTXOs []TxOutput
 	unspentTransactions := chain.FindUnspentTransactions(address)
@@ -215,6 +234,11 @@ func (chain *BlockChain) FindUTXO(address string) []TxOutput {
 	return UTXOs
 }
 
+// FindSpendableOutputs takes an address and an amount and returns a tuple of
+// two values. The first is the total amount of unspent outputs that can be
+// unlocked by the address which is greater than or equal to the amount given.
+// The second is a map of transaction IDs to output indices that contain the
+// outputs which are spendable and which satisfy the amount requirement.
 func (chain *BlockChain) FindSpendableOutputs(address string, amount int) (int, map[string][]int) {
 	unspentOuts := make(map[string][]int)
 	unspentTxs := chain.FindUnspentTransactions(address)

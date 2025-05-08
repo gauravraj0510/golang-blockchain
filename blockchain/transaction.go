@@ -26,6 +26,7 @@ type TxInput struct {
 	Sig string
 }
 
+// SetID sets the ID of the Transaction to the hash of its contents.
 func (tx *Transaction) SetID() {
 	var encoded bytes.Buffer
 	var hash [32]byte
@@ -38,6 +39,9 @@ func (tx *Transaction) SetID() {
 	tx.ID = hash[:]
 }
 
+// CoinbaseTx is a special transaction that can be added to the blockchain
+// without requiring a signature. It is used to reward miners for their work.
+// The transaction has no inputs and one output, which is the reward amount.
 func CoinbaseTx(to, data string) *Transaction {
 	if data == "" {
 		data = fmt.Sprintf("Coins to %s", to)
@@ -52,6 +56,11 @@ func CoinbaseTx(to, data string) *Transaction {
 	return &tx
 }
 
+// NewTransaction takes a sender, recipient, amount, and blockchain and creates
+// a new transaction. It finds all unspent transaction outputs for the sender,
+// creates a new transaction with the sender's unspent outputs as inputs,
+// adds the recipient as an output with the given amount, and adds the sender
+// as an output with the remaining balance. It returns the new transaction.
 func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction {
 	var inputs []TxInput
 	var outputs []TxOutput
@@ -84,14 +93,21 @@ func NewTransaction(from, to string, amount int, chain *BlockChain) *Transaction
 	return &tx
 }
 
+// IsCoinbase checks if a transaction is a coinbase transaction.
+// A coinbase transaction has only one input, and that input has a blank ID and
+// an output index of -1.
 func (tx *Transaction) IsCoinbase() bool {
 	return len(tx.Inputs) == 1 && len(tx.Inputs[0].ID) == 0 && tx.Inputs[0].Out == -1
 }
 
+// CanUnlock checks if the transaction input can be unlocked with the given data.
+// It will return true if the signature matches the data, and false otherwise.
 func (in *TxInput) CanUnlock(data string) bool {
 	return in.Sig == data
 }
 
+// CanBeUnlocked checks if the output can be unlocked with the given data.
+// It will return true if the PubKey matches the data, and false otherwise.
 func (out *TxOutput) CanBeUnlocked(data string) bool {
 	return out.PubKey == data
 }
