@@ -11,12 +11,14 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
-	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
-	golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 )
 
 require (
 	github.com/dgraph-io/badger v1.6.2
-	golang.org/x/text v0.3.0 // indirect
+	github.com/mr-tron/base58 v1.2.0
+	golang.org/x/crypto v0.38.0
+	golang.org/x/text v0.25.0 // indirect
 	rsc.io/sampler v1.3.0 // indirect
 )
